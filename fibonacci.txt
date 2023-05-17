@@ -1,0 +1,36 @@
+?0xF0
+// variables in order: i, i_max, const 1, C, D, temp
+1
+20
+1
+1
+1
+1
+?0x00
+OUT 0xF3 //C
+OUT 0xF4 //D
+LDA 0xF0 //i
+MBA
+LDA 0xF2 //const 1
+ADD
+MBA
+LDA 0xF1 //i_max
+SUB
+JN  0x1A //HLT
+LDA 0xF4 //D
+MBA
+LDA 0xF3 //C
+ADD
+STA 0xF5 //temp
+LDA 0xF4 //D
+STA 0xF3 //C
+LDA 0xF5 //temp
+STA 0xF4 //D
+OUT 0xF4 //D
+LDA 0xF0 //i
+MBA
+LDA 0xF2 //const 1
+ADD
+STA 0xF0 //i
+JMP 0x02 //load i
+HLT

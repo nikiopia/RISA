@@ -11,10 +11,27 @@ struct Machine {
     bool NEGATIVE_FLAG = false;
     bool RUNNING = true;
     int MEM[256] = { 0 };
+    int ERRORLEVEL = 0;
 };
 
-void LDA (Machine &sys, int addr) { sys.ACC = sys.MEM[addr]; }
-void STA (Machine &sys, int addr) { sys.MEM[addr] = sys.ACC; }
+void LDA (Machine &sys, int addr) {
+    if (addr < 0 || addr > 255) {
+        sys.ERRORLEVEL = -1;
+        sys.RUNNING = false;
+        return;
+    }
+    sys.ACC = sys.MEM[addr];
+}
+
+void STA (Machine &sys, int addr) {
+    if (addr < 0 || addr > 255) {
+        sys.ERRORLEVEL = -1;
+        sys.RUNNING = false;
+        return;
+    }
+    sys.MEM[addr] = sys.ACC;
+}
+
 void ADD (Machine &sys) { sys.ACC = sys.ACC + sys.B; }
 
 void SUB (Machine &sys) {
@@ -23,13 +40,31 @@ void SUB (Machine &sys) {
 }
 
 void MBA (Machine &sys) { sys.B = sys.ACC; }
-void JMP (Machine &sys, int addr) { sys.PC = addr; }
+
+void JMP (Machine &sys, int addr) {
+    if (addr < 0 || addr > 255) {
+        sys.ERRORLEVEL = -1;
+        sys.RUNNING = false;
+        return;
+    }
+    sys.PC = addr;
+}
 
 void JN (Machine &sys, int addr) {
+    if (addr < 0 || addr > 255) {
+        sys.ERRORLEVEL = -1;
+        sys.RUNNING = false;
+        return;
+    }
     if (sys.NEGATIVE_FLAG) { sys.PC = addr; } else { sys.PC++; }
 }
 
 void OUT (Machine &sys, int addr) {
+    if (addr < 0 || addr > 255) {
+        sys.ERRORLEVEL = -1;
+        sys.RUNNING = false;
+        return;
+    }
     printf("MEM[0x%x] = 0x%x\n", addr, sys.MEM[addr]);
 }
 
@@ -37,6 +72,7 @@ void HLT (Machine &sys) { sys.RUNNING = false; }
 
 void Interpreter (Machine &sys) {
     if (sys.PC < 0 || sys.PC > 255) {
+        sys.ERRORLEVEL = -1;
         sys.RUNNING = false;
         return;
     }
@@ -89,7 +125,11 @@ void importCode (Machine &sys, std::string fileName) {
         int memValue = 0;
         std::string A,B;
         while (codeText) {
-            if (memIndex < 0 || memIndex > 255) { sys.RUNNING = false; break; }
+            if (memIndex < 0 || memIndex > 255) {
+                sys.ERRORLEVEL = -1;
+                sys.RUNNING = false;
+                break;
+            }
             std::getline(codeText, line);
             if (line[0] == '?') {
                 A = line.substr(1,4);
@@ -133,13 +173,11 @@ void importCode (Machine &sys, std::string fileName) {
     } else {
         printf("Cannot locate file, stopping machine...\n");
         sys.RUNNING = false;
+        sys.ERRORLEVEL = -2;
     }
 }
 
 int main (int argc, char* argv[]) {
-    // Error level
-    int ERRORLEVEL = 0;
-
     // Machine init
     Machine sys;
     int WATCHDOG_TIMER = 1000;
@@ -161,13 +199,18 @@ int main (int argc, char* argv[]) {
             printf("Command line options:\n");
             printf("-h or -help : print this message\n");
             printf("[filename] [optional: initial program counter address, default 0x00]\n");
-            return ERRORLEVEL;
+            printf("Error levels:  0 -> ok\n");
+            printf("              -1 -> attempt access mem index out of range\n");
+            printf("              -2 -> cannot open/read code file\n");
+            printf("\nExited with code: %i\n", sys.ERRORLEVEL);
+            return sys.ERRORLEVEL;
         } else {
             importCode(sys, arg1);
         }
     } else {
         sys.RUNNING = false;
     }
+
     // Handle optional PC definition from CMD line
     if (argv[2]) {
         std::string arg2(argv[2]);
@@ -176,23 +219,8 @@ int main (int argc, char* argv[]) {
         sys.PC = 0x00;
     }
 
-    /*
-    INSTRUCTIONS:
-    0 - LDA addr -- load ACC with value at addr
-    1 - STA addr -- store acc value at addr
-    2 - ADD      -- add b to acc
-    3 - SUB      -- subtract b from acc
-    4 - MBA      -- move a to b
-    5 - JMP addr -- jump to addr
-    6 - JN  addr -- jump if negative flag to addr
-    7 - OUT addr -- display value at addr
-    8 - HLT      -- halt system
-    */
-
     if (sys.RUNNING) {
-        printf("Starting...\n");
-    } else {
-        ERRORLEVEL = -1;
+        printf("Starting...\n\n");
     }
 
     while (sys.RUNNING) {
@@ -201,7 +229,6 @@ int main (int argc, char* argv[]) {
         WATCHDOG_TIMER--;
     }
 
-    printf("Done.\n");
-
-    return ERRORLEVEL;
+    printf("\nExited with code: %i\n", sys.ERRORLEVEL);
+    return sys.ERRORLEVEL;
 }

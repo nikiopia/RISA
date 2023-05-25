@@ -21,6 +21,7 @@ void LDA (Machine &sys, int addr) {
         return;
     }
     sys.ACC = sys.MEM[addr];
+    if (sys.ACC < 0) { sys.NEGATIVE_FLAG = true; } else { sys.NEGATIVE_FLAG = false; }
 }
 
 void STA (Machine &sys, int addr) {
@@ -32,7 +33,10 @@ void STA (Machine &sys, int addr) {
     sys.MEM[addr] = sys.ACC;
 }
 
-void ADD (Machine &sys) { sys.ACC = sys.ACC + sys.B; }
+void ADD (Machine &sys) {
+    sys.ACC = sys.ACC + sys.B;
+    if (sys.ACC < 0) { sys.NEGATIVE_FLAG = true; } else { sys.NEGATIVE_FLAG = false; }
+}
 
 void SUB (Machine &sys) {
     sys.ACC = sys.ACC - sys.B;
@@ -164,8 +168,8 @@ void importCode (Machine &sys, std::string fileName) {
                 sys.MEM[memIndex] = memValue;
                 memIndex++;
             }
-            if (isdigit(line[0])) {
-                sys.MEM[memIndex] = std::stoul(line, nullptr, 10);
+            if (isdigit(line[0]) || line[0] == '-') {
+                sys.MEM[memIndex] = std::stoi(line, nullptr, 10);
                 memIndex++;
             }
         }

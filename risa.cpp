@@ -10,12 +10,12 @@ struct Machine {
     int PC = 0;
     bool NEGATIVE_FLAG = false;
     bool RUNNING = true;
-    int MEM[256] = { 0 };
+    int MEM[0x100] = { 0 };
     int ERRORLEVEL = 0;
 };
 
 void LDA (Machine &sys, int addr) {
-    if (addr < 0 || addr > 255) {
+    if (addr < 0 || addr > 0xff) {
         sys.ERRORLEVEL = -1;
         sys.RUNNING = false;
         return;
@@ -25,7 +25,7 @@ void LDA (Machine &sys, int addr) {
 }
 
 void STA (Machine &sys, int addr) {
-    if (addr < 0 || addr > 255) {
+    if (addr < 0 || addr > 0xff) {
         sys.ERRORLEVEL = -1;
         sys.RUNNING = false;
         return;
@@ -46,7 +46,7 @@ void SUB (Machine &sys) {
 void MBA (Machine &sys) { sys.B = sys.ACC; }
 
 void JMP (Machine &sys, int addr) {
-    if (addr < 0 || addr > 255) {
+    if (addr < 0 || addr > 0xff) {
         sys.ERRORLEVEL = -1;
         sys.RUNNING = false;
         return;
@@ -55,7 +55,7 @@ void JMP (Machine &sys, int addr) {
 }
 
 void JN (Machine &sys, int addr) {
-    if (addr < 0 || addr > 255) {
+    if (addr < 0 || addr > 0xff) {
         sys.ERRORLEVEL = -1;
         sys.RUNNING = false;
         return;
@@ -64,7 +64,7 @@ void JN (Machine &sys, int addr) {
 }
 
 void OUT (Machine &sys, int addr) {
-    if (addr < 0 || addr > 255) {
+    if (addr < 0 || addr > 0xff) {
         sys.ERRORLEVEL = -1;
         sys.RUNNING = false;
         return;
@@ -75,13 +75,13 @@ void OUT (Machine &sys, int addr) {
 void HLT (Machine &sys) { sys.RUNNING = false; }
 
 void Interpreter (Machine &sys) {
-    if (sys.PC < 0 || sys.PC > 255) {
+    if (sys.PC < 0 || sys.PC > 0xff) {
         sys.ERRORLEVEL = -1;
         sys.RUNNING = false;
         return;
     }
     int OPCODE = sys.MEM[sys.PC] >> 8;
-    int PARAM = sys.MEM[sys.PC] - 256 * OPCODE;
+    int PARAM = sys.MEM[sys.PC] - (OPCODE << 8);
 
     switch (OPCODE) {
         case 0:
@@ -129,7 +129,7 @@ void importCode (Machine &sys, std::string fileName) {
         int memValue = 0;
         std::string A,B;
         while (codeText) {
-            if (memIndex < 0 || memIndex > 255) {
+            if (memIndex < 0 || memIndex > 0xff) {
                 sys.ERRORLEVEL = -1;
                 sys.RUNNING = false;
                 break;
@@ -220,7 +220,7 @@ int main (int argc, char* argv[]) {
         std::string arg2(argv[2]);
         sys.PC = std::stoul(arg2, nullptr, 10);
     } else {
-        sys.PC = 0x00;
+        sys.PC = 0x0;
     }
 
     if (sys.RUNNING) {

@@ -21,7 +21,7 @@ void LDA (Machine &sys, int addr) {
         return;
     }
     sys.ACC = sys.MEM[addr];
-    if (sys.ACC < 0) { sys.NEGATIVE_FLAG = true; } else { sys.NEGATIVE_FLAG = false; }
+    sys.NEGATIVE_FLAG = sys.ACC < 0;
 }
 
 void STA (Machine &sys, int addr) {
@@ -34,13 +34,13 @@ void STA (Machine &sys, int addr) {
 }
 
 void ADD (Machine &sys) {
-    sys.ACC = sys.ACC + sys.B;
-    if (sys.ACC < 0) { sys.NEGATIVE_FLAG = true; } else { sys.NEGATIVE_FLAG = false; }
+    sys.ACC = sys.ACC + sys.B; 
+    sys.NEGATIVE_FLAG = sys.ACC < 0;
 }
 
 void SUB (Machine &sys) {
     sys.ACC = sys.ACC - sys.B;
-    if (sys.ACC < 0) { sys.NEGATIVE_FLAG = true; } else { sys.NEGATIVE_FLAG = false; }
+    sys.NEGATIVE_FLAG = sys.ACC < 0;
 }
 
 void MBA (Machine &sys) { sys.B = sys.ACC; }
